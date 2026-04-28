@@ -5,10 +5,88 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-model Item {
-  id        String   @id @default(cuid())
-  name      String
-  quantity  Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+enum BusinessRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum StockUpdateType {
+  ADD
+  REMOVE
+  ADJUST
+}
+
+model Business {
+  id           String        @id @default(cuid())
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  users        BusinessUser[]
+  ingredients  Ingredient[]
+  stockUpdates StockUpdate[]
+}
+
+model User {
+  id           String        @id @db.Uuid
+  email        String        @unique
+  fullName     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  businesses   BusinessUser[]
+  stockUpdates StockUpdate[]
+}
+
+model BusinessUser {
+  id         String       @id @default(cuid())
+  businessId String
+  userId     String       @db.Uuid
+  role       BusinessRole @default(STAFF)
+  createdAt  DateTime     @default(now())
+
+  business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, userId])
+  @@index([businessId])
+  @@index([userId])
+}
+
+model Ingredient {
+  id           String        @id @default(cuid())
+  businessId   String
+  name         String
+  unit         String
+  currentStock Float         @default(0)
+  minStock     Float?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stockUpdates StockUpdate[]
+
+  @@unique([businessId, name])
+  @@index([businessId])
+}
+
+model StockUpdate {
+  id           String          @id @default(cuid())
+  businessId   String
+  ingredientId String
+  userId       String?         @db.Uuid
+  type         StockUpdateType
+  quantity     Float
+  note         String?
+  createdAt    DateTime        @default(now())
+
+  business     Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient      @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([ingredientId])
+  @@index([userId])
 }
