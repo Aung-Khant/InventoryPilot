@@ -1,49 +1,89 @@
+import 'dotenv/config'
 import express from "express"
 import cors from "cors"
-import dotenv from "dotenv"
-import { PrismaClient } from "@prisma/client"
-import { PrismaPg } from "@prisma/adapter-pg"
-
-dotenv.config()
+import { prisma } from "./lib/prisma"
+import { requireAuth } from "./middleware/requireAuth"
+import { requireBusinessAccess } from "./middleware/requireBusinessAccess"
+import { requireAdmin } from "./middleware/requireAdmin"
 
 const app = express()
-
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-})
-
-const prisma = new PrismaClient({ adapter })
-
 const PORT = process.env.PORT || 5001
+const baseRoute = "/api/v1/businesses/:businessSlug"
 
 app.use(cors())
 app.use(express.json())
 
-// test route
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" })
 })
 
-// CREATE item
-app.post("/api/items", async (req, res) => {
-  const { name, quantity } = req.body
+app.post("/api/v1/businesses", async (req, res) => {
+  const { name, slug } = req.body
 
-  const item = await prisma.item.create({
+  const business = await prisma.business.create({
     data: {
       name,
-      quantity,
+      slug,
     },
   })
 
-  res.json(item)
+  res.json(business)
 })
 
-// READ all items
-app.get("/api/items", async (_req, res) => {
-  const items = await prisma.item.findMany()
-  res.json(items)
-})
+// app.get(`${baseRoute}/ingredients`, async (req, res) => {
+//   const { businessSlug } = req.params
 
+//   const business = await prisma.business.findUnique({
+//     where: { slug: businessSlug },
+//   })
+
+//   if (!business) {
+//     return res.status(404).json({ error: "Business not found" })
+//   }
+
+//   const ingredients = await prisma.ingredient.findMany({
+//     where: { businessId: business.id },
+//   })
+
+//   res.json(ingredients)
+// })
+
+app.get(
+  `${baseRoute}/ingredients`,
+  requireAuth,
+  requireBusinessAccess,
+  async (req, res) => {
+    const ingredients = await prisma.ingredient.findMany({
+      where: { businessId: req.business!.id },
+    })
+
+    res.json(ingredients)
+  }
+)
+app.post(
+  `${baseRoute}/ingredients`,
+  requireAuth,
+  requireBusinessAccess,
+  requireAdmin,
+  async (req, res) => {
+    const { name } = req.body
+
+    const ingredient = await prisma.ingredient.create({
+      data: {
+        name,
+        businessId: req.business!.id,
+      },
+    })
+
+    res.json(ingredient)
+  }
+)
+app.get('/api/v1/me', requireAuth, (req, res) => {
+  res.json({
+    ok: true,
+    user: req.user,
+  })
+})
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 })
