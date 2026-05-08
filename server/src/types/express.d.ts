@@ -1,4 +1,3 @@
-import type { User } from '@supabase/supabase-js'
 import type { Business, BusinessRole } from '@prisma/client'
 
 declare global {

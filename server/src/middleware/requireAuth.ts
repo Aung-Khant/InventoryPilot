@@ -35,7 +35,7 @@ export const requireAuth = async (
     // Attach user to the request object
     req.user = user;
     next();
-  } catch (err) {
+  } catch {
     return res.status(500).json({ 
       error: 'Internal server error during authentication' 
     });

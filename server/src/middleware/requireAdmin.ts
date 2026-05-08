@@ -12,7 +12,9 @@ export function requireAdmin(
     })
   }
 
-  if (req.businessRole !== BusinessRole.ADMIN) {
+  const adminRoles: BusinessRole[] = [BusinessRole.OWNER, BusinessRole.MANAGER]
+
+  if (!adminRoles.includes(req.businessRole)) {
     return res.status(403).json({
       error: "Admin access required",
     })
