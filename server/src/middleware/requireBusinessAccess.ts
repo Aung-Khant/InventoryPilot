@@ -13,7 +13,7 @@ export async function requireBusinessAccess(
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    if (!businessSlug) {
+    if (!businessSlug || typeof businessSlug !== "string") {
       return res.status(400).json({ error: "Missing business slug" });
     }
 

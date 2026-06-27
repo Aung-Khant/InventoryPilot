@@ -84,6 +84,32 @@ app.get('/api/v1/me', requireAuth, (req, res) => {
     user: req.user,
   })
 })
+<<<<<<< Updated upstream
+=======
+app.post("/auth/sync", requireAuth, async (req, res, next) => {
+  try {
+    const userEmail = req.user!.email ?? `${req.user!.id}@unknown.local`
+
+    const user = await prisma.user.upsert({
+      where: {
+        id: req.user!.id,
+      },
+      update: {
+        email: userEmail,
+      },
+      create: {
+        id: req.user!.id,
+        email: userEmail,
+      },
+    })
+
+    res.json(user)
+  } catch (error) {
+    next(error)
+  }
+})
+app.use(errorHandler)
+>>>>>>> Stashed changes
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 })
