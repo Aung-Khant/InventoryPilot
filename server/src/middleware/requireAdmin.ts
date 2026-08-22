@@ -1,4 +1,8 @@
-import type { Request, Response, NextFunction } from "express"
+import type {
+  Request,
+  Response,
+  NextFunction,
+} from "express"
 import { BusinessRole } from "@prisma/client"
 
 export function requireAdmin(
@@ -8,13 +12,18 @@ export function requireAdmin(
 ) {
   if (!req.businessRole) {
     return res.status(500).json({
-      error: "Business role missing. Did you forget requireBusinessAccess?",
+      error:
+        "Business role is missing. requireBusinessAccess must run before requireAdmin.",
     })
   }
 
-  if (req.businessRole !== BusinessRole.ADMIN) {
+  const hasAdminAccess =
+    req.businessRole === BusinessRole.OWNER ||
+    req.businessRole === BusinessRole.MANAGER
+
+  if (!hasAdminAccess) {
     return res.status(403).json({
-      error: "Admin access required",
+      error: "Owner or manager access is required",
     })
   }
 
