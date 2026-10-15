@@ -10,6 +10,8 @@ import { LoginPage } from "./pages/LoginPage"
 import { RegisterPage } from "./pages/RegisterPage"
 import { SelectBusinessPage } from "./pages/SelectBusinessPage"
 
+import { ProtectedRoute } from "./components/ProtectedRoute";
+
 function App() {
   return (
     <Routes>
@@ -38,10 +40,24 @@ function App() {
         element={<SelectBusinessPage />}
       />
 
-      <Route
-        path="/:slug/inventory"
-        element={<InventoryPage />}
-      />
+
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route
+          path="/create-business"
+          element={<CreateBusinessPage />}
+        />
+
+        <Route
+          path="/select-business"
+          element={<SelectBusinessPage />}
+        />
+
+        <Route
+          path="/:slug/inventory"
+          element={<InventoryPage />}
+        />
+      </Route>
 
       <Route
         path="*"
